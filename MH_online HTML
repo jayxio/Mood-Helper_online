@@ -1,0 +1,75 @@
+<html>
+<body onload="handleLoadEvent()">
+  <div class="box">
+    
+    <div class="face" onmousemove="eyeTrack(event)" id="face" onclick="changeFaceN()">
+    <svg width="250" height="150">
+    <rect x="0" y="0" rx="20" ry="20" width="250" height="150"
+  style="fill:red;stroke:black;stroke-width:5;opacity:0.5" />
+    </svg>
+    </div>
+    
+    <div class="left-eye" onmousemove="eyeTrack(event)">
+    <svg height="50" width="50">
+    <circle cx="25" cy="25" r="20" stroke="black" stroke-width="3" fill="#cccccc";opacity="0.5" />
+    </svg>
+    </div>
+      
+    <div class="right-eye" onmousemove="eyeTrack(event)">
+    <svg height="50" width="50">
+    <circle cx="25" cy="25" r="20" stroke="black" stroke-width="3" fill="#cccccc" />
+    </svg>
+    </div>
+    
+    <div class="mouth" onmousemove="eyeTrack(event)" id="mouth" onclick="changeFaceP()">
+      <svg width="150" height="22">
+    <rect x="0" y="0" rx="20" ry="20" width="150" height="20"
+  style="fill:white;stroke:red;stroke-width:5" />
+      </svg>
+    </div>
+      
+    <div class="left-eye-pupil" onmousemove="eyeTrack(event)" id="left-eye-pupil">
+    <svg height="50" width="50">
+    <circle cx="25" cy="25" r="5" stroke="black" stroke-width="3" fill="black" id="leye"/>
+    </svg>
+    </div>
+    
+    <div class="right-eye-pupil" onmousemove="eyeTrack(event)" id="right-eye-pupil">
+    <svg height="50" width="50">
+    <circle cx="25" cy="25" r="5" stroke="black" stroke-width="3" fill="black" id="reye"/>
+    </svg>
+    </div>
+    
+    <!--
+    show mouse location!
+-->
+    <div id="showbox">
+     <svg width="200" height="100"><rect x="0" y="0" rx="20" ry="20" width="200" height="100"style="fill:green;stroke:black;stroke-width:5;opacity:0.5" /></svg><svg height="100" width="200" id="words"> <text x="5" y="50" fill="red">Click me and I will start listen to you!!! </text> Sorry, your browser does not support inline SVG. </svg>
+    </div>
+  </div>
+  
+  <div class='camerabox'>
+    <video id="video" width="640" height="480" autoplay></video>
+    
+  </div>
+  
+  <div class='canvasbox'>
+  <button id="snap">Snap Photo</button>
+  
+    <img id="annImg" width="640" height="480" hidden=true onload="">
+  
+    <canvas id="canvas" width="640" height="480"></canvas>
+  </div>
+      <div id="hearresults">
+        <p class="output"><em>...diagnostic messages</em></p>
+      </div>
+      <div id="geolocation">
+        <div id="map" onload="initMap()">
+        </div>
+        geolocation functionality
+      </div>
+      
+      <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBdMqXf1zKsBSHVdAtvr6EsYjllX6ZC_W0&callback=initMap">
+      </script>
+</body>
+</html>
