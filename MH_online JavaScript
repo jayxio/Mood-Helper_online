@@ -1,0 +1,310 @@
+function handleLoadEvent(){
+  var video = document.getElementById('video');
+  // Get access to the camera!
+  if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    // Not adding `{ audio: true }` since we only want video now
+    navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
+        video.src = window.URL.createObjectURL(stream);
+        video.play();
+      });
+  }
+  document.getElementById('snap').addEventListener('click', sendAnnotationRequest);
+}
+
+function getUserFaceUrl(){
+  var video = document.getElementById('video');
+  //var img = document.getElementById("annImg");
+  var canvas = document.getElementById('canvas');
+  var context = canvas.getContext('2d');
+  
+  canvas.setAttribute("width", video.width);
+  canvas.setAttribute("height", video.height);
+  context.drawImage(video, 0, 0, video.width, video.height);
+  
+  var data = canvas.toDataURL();
+  var commaIndex = data.indexOf(",");
+  var imgString = data.substring(commaIndex+1,data.length);
+  
+  return imgString;
+}
+
+//the function is called when user asked the robot if he is happy
+function sendAnnotationRequest()
+{
+  /*This is the URL of the image to be annotated*/
+  var annImgURL = getUserFaceUrl(); // url of the image to be annotated
+  
+  /*This is the URL for the web service request, including the key of your app as a parameter*/
+  var url =
+  "https://vision.googleapis.com/v1/images:annotate?key=AIzaSyA6LIzhXZdhYbEPgi0vOFUWb2GjcaaGU_s";
+  
+  /*The is the request that will be sent as JSON*/
+  var request = {
+    requests: [
+      {
+        image: {
+            content: annImgURL
+        },
+        features: [
+          {
+            type: "FACE_DETECTION",
+            maxResults: 10
+          }
+        ]
+      }
+    ]
+  };
+  ajaxRequest("POST", url, handleResponse, JSON.stringify(request));
+}
+
+//when google api response we parse the text and process
+function handleResponse() {
+  if (successfulRequest(this)) {
+    var response = JSON.parse(this.responseText);
+    console.log(response);
+    var annotations = response.responses[0].faceAnnotations;
+    var canvas = document.getElementById("canvas");
+    var context = canvas.getContext("2d");
+    
+
+    for (var i = 0; i < annotations.length; i++) {
+      var ann = annotations[i];
+      var bb = ann.boundingPoly.vertices;
+
+      context.beginPath();
+      context.moveTo(bb[0].x, bb[0].y);
+      context.lineTo(bb[1].x, bb[1].y);
+      context.lineTo(bb[2].x, bb[2].y);
+      context.lineTo(bb[3].x, bb[3].y);
+      context.lineTo(bb[0].x, bb[0].y);
+      context.lineWidth = 10;
+      context.strokeStyle = "#0F0";
+      context.fillStyle = "#0F0";
+      context.stroke();
+      
+      context.font = "36px Arial";
+      
+      if(ann.joyLikelihood==='VERY_LIKELY'){
+        context.fillText("Joy: " + ann.joyLikelihood,
+                       bb[0].x,
+                       bb[0].y - 10);
+        console.log("I'm just as happy as you！Let's dance!");
+        readNews("I'm just as happy as you！Let's dance!");
+        changeFaceP();
+      }else if(ann.joyLikelihood==='LIKELY'||ann.joyLikelihood==='POSSIBLE'){
+        context.fillText("Sorrow: " + ann.joyLikelihood,
+                       bb[0].x,
+                       bb[0].y - 10);
+        console.log("Fake laugh!!");
+        readNews("Fake laugh!!");
+        changeFaceP();
+      }else if(ann.sorrowLikelihood==='VERY_LIKELY'){
+        context.fillText("Fake laugh: " + ann.sorrowLikelihood,
+                       bb[0].x,
+                       bb[0].y - 10);
+        console.log("What happened to you babe? Come on hug me!");
+        readNews("What happened to you babe? Come on hug me!");
+        changeFaceN();
+      }else if(ann.angerLikelihood==='VERY_LIKELY'){
+        context.fillText("Anger: " + ann.angerLikelihood,
+                       bb[0].x,
+                       bb[0].y - 10);
+        console.log("Come down master! No decision should be made in this mood!");
+        readNews("Come down master! No decision should be made in this mood!");
+        changeFaceN();
+      }else if(ann.surpriseLikelihood==='VERY_LIKELY'){
+        context.fillText("Surprise: " + ann.surpriseLikelihood,
+                       bb[0].x,
+                       bb[0].y - 10);
+        console.log("What? What are you surprised about?");
+        readNews("What? What are you surprised about?");
+        changeFaceP();
+      }else if(ann.blurredLikelihood==='VERY_LIKELY'){
+        context.fillText("Blurred: " + ann.blurredLikelihood,
+                       bb[0].x,
+                       bb[0].y - 10);
+        console.log("It's kind of blurred master!");
+        readNews("It's kind of blurred master!");
+      }else if(ann.headwearLikelihood==='VERY_LIKELY'){
+        context.fillText("Headwear: " + ann.headwearLikelihood,
+                       bb[0].x,
+                       bb[0].y - 10);
+        console.log("What's on your head master?");
+        readNews("What's on your head master?");
+      };
+     
+      
+      console.log(ann);
+      
+    }
+  } else {
+    console.log("Ready state: " + this.readyState);
+    console.log("Status: " + this.status);
+    console.log("Status text: " + this.statusText);
+  }
+}
+
+function eyeTrack(event) {
+  var Xm = event.clientX;
+  var Ym = event.clientY;
+  
+  var showdiv = document.getElementById("showbox");
+  var face = document.getElementById("face");
+  var lefteyepupil = document.getElementById("left-eye-pupil");
+  var righteyepupil = document.getElementById("right-eye-pupil");
+  
+  var facerect = face.getBoundingClientRect();
+  var lefteyerect = lefteyepupil.getBoundingClientRect();
+  var rightrect = righteyepupil.getBoundingClientRect();
+  
+  var Xlp = lefteyerect.left + 25, Ylp = lefteyerect.top + 25;
+  var Xrp = rightrect.left + 25, Yrp = rightrect.top + 25;
+  
+  /*
+  var d1 = Math.sqrt((Math.pow((Xlp-Xm),2) + Math.pow((Ylp-Ym),2))).toFixed(1);
+  var d2 = Math.sqrt((Math.pow((Xrp-Xm),2) + Math.pow((Yrp-Ym),2))).toFixed(1);
+  */
+  
+  var XLp = Xm/20 + Xlp*19/20 - lefteyerect.left;
+  var YLp = Ym/20 + Ylp*19/20 - lefteyerect.top;
+  var XRp = Xm/20 + Xrp*19/20 - rightrect.left;
+  var YRp = Ym/20 + Yrp*19/20 - rightrect.top;
+  
+  var leye = document.getElementById("leye");
+  var reye = document.getElementById("reye");
+  
+  leye.setAttribute("cx",XLp);
+  leye.setAttribute("cy",YLp);
+  reye.setAttribute("cx",XRp);
+  reye.setAttribute("cy",YRp);
+  
+  showdiv.innerHTML = '<svg width="200" height="100"><rect x="0" y="0" rx="20" ry="20" width="200" height="100"style="fill:green;stroke:black;stroke-width:5;opacity:0.5" /></svg><svg height="100" width="200" id="words"> <text x="5" y="50" fill="red">Click me master!!! </text> Sorry, your browser does not support inline SVG. </svg>';
+}
+function changeFaceN() {
+  var mouth = document.getElementById("mouth");
+  var showdiv = document.getElementById("showbox");
+  showdiv.innerHTML = '<svg width="200" height="100"><rect x="0" y="0" rx="20" ry="20" width="200" height="100"style="fill:green;stroke:black;stroke-width:5;opacity:0.5" /></svg><svg height="100" width="200" id="words"> <text x="5" y="50" fill="red">Hello guys! I am terminator! </text> Sorry, your browser does not support inline SVG. </svg>';
+  
+  mouth.innerHTML = '<svg height="30" width="150"><polygon points="75,5 0,22 150,22" style="fill:white;stroke:red;stroke-width:6" />Sorry, your browser does not support inline SVG.</svg>'
+}
+
+function changeFaceP() {
+  var mouth = document.getElementById("mouth");
+  var showdiv = document.getElementById("showbox");
+  showdiv.innerHTML = '<svg width="200" height="100"><rect x="0" y="0" rx="20" ry="20" width="200" height="100"style="fill:green;stroke:black;stroke-width:5;opacity:0.5" /></svg><svg height="100" width="200" id="words"> <text x="5" y="50" fill="red">Hello guys! I am your candy! </text> Sorry, your browser does not support inline SVG. </svg>';
+  mouth.innerHTML = '<svg height="30" width="150"><polygon points="75,22 0,0 150,0" style="fill:white;stroke:red;stroke-width:6" />Sorry, your browser does not support inline SVG.</svg>'
+}
+ function initMap() {
+   
+   var uluru = {lat: -25.363, lng: 131.044};
+   var map = new google.maps.Map(document.getElementById('map'), {
+     zoom: 6,
+     center: uluru
+   });
+   var marker = new google.maps.Marker({
+     position: uluru,
+     map: map
+   });
+   infoWindow = new google.maps.InfoWindow;
+
+   // Try HTML5 geolocation.
+   if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function(position) {
+         var pos = {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude
+         };
+
+      infoWindow.setPosition(pos);
+      infoWindow.setContent('Location found.');
+      infoWindow.open(map);
+      map.setCenter(pos);
+      }, function() {
+          handleLocationError(true, infoWindow, map.getCenter());
+      });
+      } else {
+          // Browser doesn't support Geolocation
+          handleLocationError(false, infoWindow, map.getCenter());
+        }
+}
+
+/*Helper function: sends an XMLHTTP request*/
+function ajaxRequest(method, url, handlerFunction, content) {
+  var xhttp = new XMLHttpRequest();
+  xhttp.open(method, url);
+  xhttp.onreadystatechange = handlerFunction;
+  xhttp.send(content);
+}
+
+/*Helper function: checks if the response to the request is ready to process*/
+function successfulRequest(request) {
+  return request.readyState === 4 && request.status == 200;
+}
+
+//read the input words 
+//To do: change the undefined globale news variable and suit the current programme 
+function readNews(storyText)
+{
+  var speech = new SpeechSynthesisUtterance(storyText);
+  window.speechSynthesis.speak(speech);
+}
+//if __main__ =="__main__"
+
+var SpeechRecognition = SpeechRecognition || webkitSpeechRecognition
+var SpeechGrammarList = SpeechGrammarList || webkitSpeechGrammarList
+var SpeechRecognitionEvent = SpeechRecognitionEvent || webkitSpeechRecognitionEvent
+
+var colors = ['activate camera', 'what is my emotion', 'look at my face', 'do I look happy', 'am I happy'];
+var grammar = '#JSGF V1.0; grammar colors; public <color> = ' + colors.join(' | ') + ' ;'
+
+var recognition = new SpeechRecognition();
+var speechRecognitionList = new SpeechGrammarList();
+speechRecognitionList.addFromString(grammar, 1);
+recognition.grammars = speechRecognitionList;
+//recognition.continuous = false;
+recognition.lang = 'en-US';
+recognition.interimResults = false;
+recognition.maxAlternatives = 1;
+
+var diagnostic = document.querySelector('.output');
+var bg = document.querySelector('html');
+var hints = document.querySelector('.hints');
+
+document.body.onclick = function() {
+  recognition.start();
+  console.log('Ready to give an emotion analysis.');
+}
+
+recognition.onresult = function(event) {
+  // The SpeechRecognitionEvent results property returns a SpeechRecognitionResultList object
+  // The SpeechRecognitionResultList object contains SpeechRecognitionResult objects.
+  // It has a getter so it can be accessed like an array
+  // The [last] returns the SpeechRecognitionResult at the last position.
+  // Each SpeechRecognitionResult object contains SpeechRecognitionAlternative objects that contain individual results.
+  // These also have getters so they can be accessed like arrays.
+  // The [0] returns the SpeechRecognitionAlternative at position 0.
+  // We then return the transcript property of the SpeechRecognitionAlternative object
+
+  var last = event.results.length - 1;
+  var color = event.results[last][0].transcript;
+
+  diagnostic.textContent = 'You said: ' + color + '.';
+  bg.style.backgroundColor = color;
+  if(color==='what is my emotion'||color==='look at my face'||color==='do I look happy'||color==='am I happy'){
+    sendAnnotationRequest();
+  }
+  console.log('Confidence: ' + event.results[0][0].confidence);
+  
+}
+
+recognition.onspeechend = function() {
+  recognition.stop();
+}
+
+recognition.onnomatch = function(event) {
+  diagnostic.textContent = "I didn't recognise that color.";
+}
+
+recognition.onerror = function(event) {
+  diagnostic.textContent = 'Error occurred in recognition: ' + event.error;
+}
