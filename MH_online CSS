@@ -1,0 +1,106 @@
+body{
+  background: #cccccc;
+}
+.box {
+  position: absolute;
+  border: 3px solid white;
+  width: 350px;
+  height: 300px;
+  margin: auto;
+  display: block;
+}
+.camerabox{
+  position: absolute;
+  top: 8px;
+  left: 370px;
+  border: 3px solid black;
+  width: 640px;
+  height: 480px;
+  margin: auto;
+  display: block;
+}
+.canvasbox{
+  position: absolute;
+  top: 500px;
+  left: 370px;
+  border: 3px solid black;
+  width: 640px;
+  height: 480px;
+  margin: auto;
+  display: block;
+}
+.face { 
+  position: absolute;
+  top: 120px;
+  left: 80px;
+  
+ }
+
+.left-eye {
+  position: absolute;
+  top: 144px;
+  left: 236px;
+  
+ }
+
+.right-eye {
+  position: absolute;
+  top: 144px;
+  left: 124px;
+  
+ }
+.mouth {
+  position: absolute;
+  top: 224px;
+  left: 130px;
+  
+}
+.left-eye-pupil{
+  position: absolute;
+  top: 144px;
+  left: 124px;
+  
+}
+.right-eye-pupil{
+  position: absolute;
+  top: 144px;
+  left: 236px;
+  
+}
+#showbox{
+  width: 200px;
+  height: 100px;
+  
+}
+#words{
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  
+}
+#wrapper{
+  height: 100%;
+  width: 100%;
+  
+}
+#map {
+  height: 200px;
+  width: 100%;
+ }
+#geolocation{
+  position: absolute;
+  top: 800px;
+  left: 0px;
+  height: 200px;
+  width: 30%;
+  border: 2px black solid;
+}
+#hearresults{
+  position: absolute;
+  top: 330px;
+  left: 0px;
+  height: 50px;
+  width: 30%;
+  border: 2px black solid;
+}
+
